@@ -8,7 +8,7 @@
 #include <vector>
  
 using namespace std;
- 
+
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
  
 string ReadLine() {
@@ -48,7 +48,7 @@ struct Document {
     int id;
     double relevance;
 };
- 
+// This is the main class
 class SearchServer {
 public:
     void SetStopWords(const string& text) {
