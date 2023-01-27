@@ -16,15 +16,15 @@ string ReadLine() {
     getline(cin, s);
     return s;
 }
- 
-int ReadLineWithNumber() {
+
+int ReadLineWithNumber() { // This function are needed to divide a number of strings and strings
     int result = 0;
     cin >> result;
     ReadLine();
     return result;
 }
  
-vector<string> SplitIntoWords(const string& text) {
+vector<string> SplitIntoWords(const string& text) { // From string, consisted of words, to vector of words
     vector<string> words;
     string word;
     for (const char c : text) {
@@ -47,9 +47,23 @@ vector<string> SplitIntoWords(const string& text) {
 struct Document {
     int id;
     double relevance;
+    int rating; // a new point
 };
-// This is the main class
-class SearchServer {
+
+int ComputeAverageRating(const vector<int>& ratings) { // Это новая функция для расчёта среднего рейтинга
+    if (ratings.empty()) {
+        return 0;
+    }
+    int rating_sum = 0;
+    for (const int rating : ratings) {
+        rating_sum += rating;
+    }
+    // static_cast позволяет привести значение к типу int
+    // без использования дополнительной переменной
+    return rating_sum / static_cast<int>(ratings.size());
+}
+
+class SearchServer { // This is the main
 public:
     void SetStopWords(const string& text) {
         for (const string& word : SplitIntoWords(text)) {
@@ -57,13 +71,14 @@ public:
         }
     }
  
-    void AddDocument(int document_id, const string& document) {
+    void AddDocument(int document_id, const string& document, const vector<int>& ratings) { //const vector<int>& ratings новое
         ++document_count_;
         const vector<string> words = SplitIntoWordsNoStop(document);
         const double inv_word_count = 1.0 / words.size();
         for (const string& word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
         }
+        document_ratings_.emplace(document_id, ComputeAverageRating(ratings)); // добавление и рассчёт рейтинга через функцию
     }
  
     vector<Document> FindTopDocuments(const string& raw_query) const {
@@ -95,6 +110,7 @@ private:
     int document_count_ = 0;
     set<string> stop_words_;
     map<string, map<int, double>> word_to_document_freqs_;
+    map<int, int> document_ratings_;
  
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -162,7 +178,7 @@ private:
  
         vector<Document> matched_documents;
         for (const auto [document_id, relevance] : document_to_relevance) {
-            matched_documents.push_back({document_id, relevance});
+            matched_documents.push_back({document_id, relevance, document_ratings_.at(document_id)}); //добавлено document_ratings_.at(document_id)
         }
         return matched_documents;
     }
@@ -174,18 +190,35 @@ SearchServer CreateSearchServer() {
  
     const int document_count = ReadLineWithNumber();
     for (int document_id = 0; document_id < document_count; ++document_id) {
-        search_server.AddDocument(document_id, ReadLine());
+        const string document = ReadLine();
+        int ratings_size;
+        cin >> ratings_size;
+        
+        // создали вектор размера ratings_size из нулей
+        vector<int> ratings(ratings_size, 0);
+        
+        // считали каждый элемент с помощью ссылки
+        for (int& rating : ratings) {
+            cin >> rating;
+        }
+        
+        search_server.AddDocument(document_id, document, ratings);
+        ReadLine();
     }
- 
+    
     return search_server;
 }
  
 int main() {
     const SearchServer search_server = CreateSearchServer();
- 
+    
+    //Поменяли вывод, так как добавилось ещё одно поле
     const string query = ReadLine();
-    for (const auto& [document_id, relevance] : search_server.FindTopDocuments(query)) {
-        cout << "{ document_id = "s << document_id << ", "
-             << "relevance = "s << relevance << " }"s << endl;
+    for (const Document& document : search_server.FindTopDocuments(query)) {
+        cout << "{ "
+             << "document_id = " << document.id << ", "
+             << "relevance = " << document.relevance << ", "
+             << "rating = " << document.rating
+             << " }" << endl;
     }
 }
