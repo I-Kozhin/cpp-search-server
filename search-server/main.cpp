@@ -50,19 +50,6 @@ struct Document {
     int rating; // a new point
 };
 
-int ComputeAverageRating(const vector<int>& ratings) { // Это новая функция для расчёта среднего рейтинга
-    if (ratings.empty()) {
-        return 0;
-    }
-    int rating_sum = 0;
-    for (const int rating : ratings) {
-        rating_sum += rating;
-    }
-    // static_cast позволяет привести значение к типу int
-    // без использования дополнительной переменной
-    return rating_sum / static_cast<int>(ratings.size());
-}
-
 class SearchServer { // This is the main
 public:
     void SetStopWords(const string& text) {
@@ -153,6 +140,20 @@ private:
  
     double ComputeWordInverseDocumentFreq(const string& word) const {
         return log(document_count_ * 1.0 / word_to_document_freqs_.at(word).size());
+    }
+
+    static int ComputeAverageRating(const vector<int>& ratings) { // Теперь рассчёт рейтинга в статичном методе внутри класса, т.е. функцию ComputeAverageRating я просто загнал внутрь класса
+        if (ratings.empty()) {
+            return 0;
+        }
+        int rating_sum = 0;
+        for (const int rating : ratings) {
+            rating_sum += rating;
+        }
+        // static_cast позволяет привести значение к типу int
+        // без использования дополнительной переменной
+        return rating_sum / static_cast<int>(ratings.size());
+
     }
  
     vector<Document> FindAllDocuments(const Query& query) const {
