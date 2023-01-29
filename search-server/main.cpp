@@ -14,6 +14,7 @@
 
 using namespace std;
 
+const double EPSILON = 1e-6;
 
 // -------- Начало модульных тестов поисковой системы ----------
 
@@ -44,11 +45,18 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
 void TestAddDocument() {
     SearchServer server;
     server.AddDocument(0, "белый кот и модный ошейник"s, DocumentStatus::ACTUAL, { 8, -3 });
-    vector<Document> document = server.FindTopDocuments("белый кот и модный ошейник"s);
+    // Добавляю проверку нескольких документов дополнительно
+    server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, {7, 2, 7});
+    server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
+
+    vector<Document> document = server.FindTopDocuments("пушистый ухоженный кот"s);
 
     ASSERT_EQUAL(server.FindTopDocuments("белый кот и модный ошейник"s)[0].id , 0);
-    ASSERT_EQUAL(server.FindTopDocuments("белый кот и модный ошейник"s)[0].relevance , 0);
-    ASSERT(server.FindTopDocuments("белый кот и модный ошейник"s)[0].rating == 2);
+
+    ASSERT_EQUAL(server.FindTopDocuments("пушистый кот пушистый хвост"s)[0].id , 1);
+
+    ASSERT_EQUAL(server.FindTopDocuments("ухоженный пёс выразительные глаза"s)[0].id , 2);
+
 
 }
 
@@ -120,18 +128,19 @@ void TestSortDocument() {
 //6. Вычисление рейтинга документов. Рейтинг добавленного документа равен среднему арифметическому оценок
 void TestRatingDocument() {
     SearchServer server;
-    server.AddDocument(1, "белый пес модный"s, DocumentStatus::ACTUAL, { 8, 3 });
-    vector<Document> document = server.FindTopDocuments("белый пес модный"s);
-
-    ASSERT_EQUAL(server.FindTopDocuments("белый кот и модный ошейник"s)[0].rating , 5);
-    ASSERT_EQUAL_HINT(server.FindTopDocuments("белый кот и модный ошейник"s)[0].rating , 5, " EXPR MUST BE EQUAL "s);
-    ASSERT(server.FindTopDocuments("белый кот и модный ошейник"s)[0].rating == 5);
-    ASSERT_HINT(server.FindTopDocuments("белый кот и модный ошейник"s)[0].rating == 5, " EXPR MUST BE EQUAL ");
+    // Добавлены новые тесты, который учитывают разный рейтинг
+    server.AddDocument(0, "кот и собака кусают мышь"s, DocumentStatus::ACTUAL, {-7, 4, 3});
+    server.AddDocument(1, "кит и лиса кусают мышь кусают"s, DocumentStatus::ACTUAL, {-4, 5, 5});
+    server.AddDocument(2, "коробка ручной сборки"s, DocumentStatus::ACTUAL, {-5, 9, 0});
+    const auto result=server.FindTopDocuments("кусают"s );
+    ASSERT_EQUAL( (result.size()), 2);
+    ASSERT_EQUAL_HINT ( (result[0].rating), 2 , "неправильно считается рейтинг документов"s);
+    ASSERT_EQUAL_HINT ( (result[1].rating), 0, "неправильно считается рейтинг документов"s);
 
 }
 
 //7. Фильтрация результатов поиска с использованием предиката, задаваемого пользователем.
-void TestFiltrDocument() {
+void TestFilterDocument() {
     SearchServer server;
     server.AddDocument(0, "белый пес модный"s, DocumentStatus::ACTUAL, { 8, 3 });
     server.AddDocument(1, "белый пес старомодный"s, DocumentStatus::ACTUAL, { 8, 14 });
@@ -147,7 +156,7 @@ void TestFiltrDocument() {
 }
 
 //8 Поиск документов, имеющих заданный статус.
-void TestFiltrSTATYSDocument() {
+void TestFilterStatusDocument() {
     SearchServer server;
     server.AddDocument(0, "белый пес модный"s, DocumentStatus::ACTUAL, { 8, 3 });
     server.AddDocument(1, "белый пес старомодный"s, DocumentStatus::ACTUAL, { 8, 14 });
@@ -172,23 +181,23 @@ void TestRelevanceDocument() {
 
     vector<Document> document = server.FindTopDocuments("белый пес модный"s);
 
-    ASSERT((server.FindTopDocuments("белый пес модный"s)[0].relevance - 0.231049) < 0.00001);
-    ASSERT_HINT((server.FindTopDocuments("белый пес модный"s)[0].relevance - 0.231049) < 0.00001, " EXPR MUST BE EQUAL ");
+    ASSERT(abs(server.FindTopDocuments("белый пес модный"s)[0].relevance - 0.231049) < EPSILON);
+    ASSERT_HINT(abs(server.FindTopDocuments("белый пес модный"s)[0].relevance - 0.231049) < EPSILON, " EXPR MUST BE EQUAL ");
 }
 
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
     RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
-    TestAddDocument();
-    TestExcludeStopWord();
-    TestMinusWord();
-    TestMatchDoc();
-    TestSortDocument();
-    TestRatingDocument();
-    TestFiltrSTATYSDocument();
-    TestFiltrDocument();
-    TestRelevanceDocument();
+    RUN_TEST(TestAddDocument);
+    RUN_TEST(TestExcludeStopWord);
+    RUN_TEST(TestMinusWord);
+    RUN_TEST(TestMatchDoc);
+    RUN_TEST(TestSortDocument);
+    RUN_TEST(TestRatingDocument);
+    RUN_TEST(TestFilterStatusDocument);
+    RUN_TEST(TestFilterDocument);
+    RUN_TEST(TestRelevanceDocument);
 
 }
 
