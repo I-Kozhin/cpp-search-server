@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+search-server/.vscode/settings.json
+search-server/.vscode/tasks.json
+search-server/.vscode/launch.json
+search-server/.vscode/settings.json
+.gitignore
+search-server/.vscode/settings.json
