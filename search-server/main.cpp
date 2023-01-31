@@ -67,7 +67,7 @@ struct Document { // Теперь с конструктором и значен�
 };
 
 template <typename StringContainer>
-set<string> MakeFulfillStrings(const StringContainer& strings) { // Функция для констуктора переменной класса SearchServer
+set<string> MakeUniqueNonEmptyStrings(const StringContainer& strings) { // Функция для констуктора переменной класса SearchServer
     set<string> non_empty_strings;
     for (const string& str : strings) {
         if (!str.empty()) {
@@ -81,7 +81,7 @@ class SearchServer {
 public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words)
-        : stop_words_(MakeFulfillStrings(stop_words)) { // Добавлена проверка на запрещенные символы в стоп-словах
+        : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) { // Добавлена проверка на запрещенные символы в стоп-словах
             for (auto i : stop_words_) {if (IsNoSpecialCharacters(i) == false) throw invalid_argument("invalid_argument");}
     }
     explicit SearchServer(const string& stop_words_text)
