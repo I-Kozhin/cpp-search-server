@@ -44,7 +44,14 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "vector": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "algorithm": "cpp",
+        "iomanip": "cpp",
+        "map": "cpp",
+        "optional": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp",
+        "xtree": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

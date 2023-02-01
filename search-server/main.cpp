@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 using namespace std;
 
@@ -92,8 +93,7 @@ public:
     inline static constexpr int INVALID_DOCUMENT_ID = -1; 
 
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        bool b = IsValidWords(document);
-        if (!b)                                         // добавлена проверка, что все слова в документе соответсвуют требованиям
+        if (!IsValidWords(document)) // явное указание метода в условии                                        // добавлена проверка, что все слова в документе соответсвуют требованиям
             throw invalid_argument("invalid_argument");
         if (document_id < 0 || count(docs_indexes_.begin(), docs_indexes_.end(), document_id) != 0 || IsNoSpecialCharacters(document) == false)
             throw invalid_argument("invalid_argument");
@@ -109,9 +109,6 @@ public:
 
     template <typename DocumentPredication>
     vector<Document> FindTopDocuments(const string& raw_query, DocumentPredication document_predication) const {
-        bool b = IsValidWords(raw_query); // добавлена проверка ввода
-        if (!b)
-            throw invalid_argument("invalid_argument");
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, document_predication);
         sort(matched_documents.begin(), matched_documents.end(),
@@ -119,9 +116,7 @@ public:
                 if (abs(lhs.relevance - rhs.relevance) < EPSILON) {
                     return lhs.rating > rhs.rating;
                 }
-                else {
-                    return lhs.relevance > rhs.relevance;
-                }
+                return lhs.relevance > rhs.relevance;
             });
         if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
             matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
@@ -142,23 +137,14 @@ public:
         return documents_.size();
     }
     
-    int GetDocumentId(int index) const { // добавлена функция, выдающая индекса документа, с проверкой на релевантность данных
-        if (index < 0 || index >= GetDocumentCount()) { throw out_of_range("index out_of_range"); }
-        else {
-            if (find(docs_indexes_.begin(), docs_indexes_.end(), index) != docs_indexes_.end())
-            {
-                return docs_indexes_.at(index);
-            }
-            else {
-                throw out_of_range("index out_of_range");
-            }
-        }
+    int GetDocumentId(int index) const { // добавлена функция, выдающая индекса документа, с проверкой на релевантность данных 
+        if (index < 0 || index >= GetDocumentCount()) { throw out_of_range("index out_of_range");
+        } else { 
+            return docs_indexes_.at(index); 
+        } 
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
-        bool b = IsValidWords(raw_query);   // Добавлена проверка валидности ввода
-        if (!b)
-            throw invalid_argument("invalid_argument");
         const Query query = ParseQuery(raw_query);
         vector<string> matched_words;
         for (const string& word : query.plus_words) {
@@ -210,10 +196,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
+        int rating_sum = accumulate(ratings.begin(), ratings.end(), 0); // добавлен accumulate
         return rating_sum / static_cast<int>(ratings.size());
     }
     
@@ -252,6 +235,8 @@ private:
     
     Query ParseQuery(const string& text) const {
         Query query;
+        if (!IsValidWords(text))  // добавлена проверка ввода, произведена инкапсудяция проверки
+            throw invalid_argument("invalid_argument");
         for (const string& word : SplitIntoWords(text)) {
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
