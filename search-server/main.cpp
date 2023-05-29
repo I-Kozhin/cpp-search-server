@@ -3,7 +3,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 using namespace std;
+
 int main() {
     SearchServer search_server("and with"s);
     int id = 0;
@@ -23,11 +25,8 @@ int main() {
         "not very funny nasty pet"s,
         "curly hair"s
     };
-    id = 0;
-    for (
-        const auto& documents : ProcessQueries(search_server, queries)
-    ) {
-        cout << documents.size() << " documents for query ["s << queries[id++] << "]"s << endl;
+    for (const Document& document : ProcessQueriesJoined(search_server, queries)) {
+        cout << "Document "s << document.id << " matched with relevance "s << document.relevance << endl;
     }
     return 0;
 }
