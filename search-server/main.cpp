@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include <string_view>
 using namespace std;
 
 /*#include "search_server.h"
@@ -96,7 +96,14 @@ int main() {
 
 int main() {
     SearchServer search_server("and with"s);
-
+    // Должен быть такой вывод:
+    /*
+    1 words for document 1
+2 words for document 2
+0 words for document 3 
+    */
+    
+    
     int id = 0;
     for (
         const string& text : {
@@ -111,7 +118,15 @@ int main() {
     }
 
     const string query = "curly and funny -not"s;
-
+    std::string_view sw(query.data(), query.length());
+    //convert string to string view 
+    
+    {
+        const auto [words, status] = search_server.MatchDocument(sw, 1);
+        cout << words.size() << " words for document 1 with sv : "s << endl;
+        // 1 words for document 1
+    }
+    
     {
         const auto [words, status] = search_server.MatchDocument(query, 1);
         cout << words.size() << " words for document 1"s << endl;
@@ -123,6 +138,8 @@ int main() {
         cout << words.size() << " words for document 2"s << endl;
         // 2 words for document 2
     }
+    
+
 
     {
         const auto [words, status] = search_server.MatchDocument(execution::par, query, 3);
