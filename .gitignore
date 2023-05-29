@@ -35,4 +35,8 @@ search-server/.vscode/tasks.json
 search-server/.vscode/launch.json
 search-server/.vscode/settings.json
 .gitignore
+search-server/.vscode/*
+.vscode
+.vscode/*
+.vscode/settings.json
 search-server/.vscode/settings.json
