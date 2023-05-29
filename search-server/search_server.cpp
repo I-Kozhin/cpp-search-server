@@ -180,16 +180,59 @@ const std::map<std::string, double>& SearchServer::GetWordFrequencies(int docume
 	return word_freqs_.at(document_id);
 }
 
-void SearchServer::RemoveDocument(int document_id) {
+// Версия без политики
+/*void SearchServer::RemoveDocument(int document_id) {
   word_freqs_.erase(document_id);
-  for(auto [word, freq]: GetWordFrequencies(document_id)) {
-    auto it = word_to_document_freqs_[word].find(document_id);
-    if (it != word_to_document_freqs_[word].end()) {
-      word_to_document_freqs_[word].erase(it);
-    }
-  }
-
+  for (auto &word: SearchServer:: word_to_document_freqs_) {
+        bool is_document_present = word.second.count(document_id);
+        if (is_document_present) {
+            word.second.erase(document_id);
+        }
+    }  
+  
   documents_.erase(document_id);
   document_ids_.erase(document_id);
+}*/
 
+void SearchServer::RemoveDocument(int document_id){
+    document_ids_.erase(document_id);
+    documents_.erase(document_id);
+    word_freqs_.erase(document_id);
+    for(auto &[key, value]:word_to_document_freqs_){
+        value.erase(document_id);
+    }
+ }
+ 
+void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int document_id){
+     document_ids_.erase(document_id);
+     documents_.erase(document_id);
+     std::vector<std::string*> qwe(word_freqs_.at(document_id).size(),nullptr);
+            transform(std::execution::par,word_freqs_.at(document_id).begin(),word_freqs_.at(document_id).end(),qwe.begin(),[](auto& t){
+        return new std::string(t.first);
+    });
+      
+      auto p=[this,document_id](auto t){
+          
+          word_to_document_freqs_.at(*t).erase(document_id);
+      };
+         word_freqs_.erase(document_id);
+    
+    for_each(std::execution::par, qwe.begin(),qwe.end(),p);
+}
+ 
+void SearchServer::RemoveDocument(const std::execution::sequenced_policy&, int document_id){
+    document_ids_.erase(document_id);
+    documents_.erase(document_id);
+    std::vector<std::string> qwe(word_freqs_.at(document_id).size());
+            transform(std::execution::seq,word_freqs_.at(document_id).begin(),word_freqs_.at(document_id).end(),qwe.begin(),[](auto& t){
+        return t.first;
+    });
+      
+      auto p=[this,document_id](auto t){
+          
+          word_to_document_freqs_.at(t).erase(document_id);
+      };
+         word_freqs_.erase(document_id);
+    //for_each(std::execution::par, qwe.begin(),qwe.end(),p);
+    for_each(std::execution::seq, qwe.begin(),qwe.end(),p);
 }

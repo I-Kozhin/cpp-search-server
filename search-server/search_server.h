@@ -1,5 +1,6 @@
 #pragma once
 #include "document.h"
+#include "log_duration.h"
 #include "string_processing.h"
 #include "read_input_functions.h"
 #include <algorithm>
@@ -11,7 +12,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <deque>
+#include <execution>
+#include <functional>
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
@@ -44,7 +46,9 @@ public:
     
     //3. Разработайте метод удаления документов из поискового сервера
     void RemoveDocument(int document_id);
-    
+    void RemoveDocument(const std::execution::sequenced_policy&, int document_id);
+    void RemoveDocument(const std::execution::parallel_policy& policy, int document_id);
+
     std::set<int> GetDoc_ids( ){return document_ids_;} ;
     
     //2.Разработайте метод получения частот слов по id документа: 
@@ -151,4 +155,3 @@ DocumentPredication document_predication) const {
     }
     return matched_documents;
 }
-    
