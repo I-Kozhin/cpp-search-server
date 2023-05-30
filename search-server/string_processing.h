@@ -1,7 +1,9 @@
 #pragma once
-#include <vector>
 #include <string>
+#include <vector>
+#include <list>
 #include <set>
+#include <string_view>
 
 std::list<std::string_view> SplitIntoWords(std::string_view text);
 

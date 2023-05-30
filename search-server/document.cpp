@@ -3,8 +3,11 @@
 using namespace std;
 
 Document::Document(int id, double relevance, int rating)
-    : id(id), relevance(relevance), rating(rating) {}
+    : id(id),
+     relevance(relevance), 
+     rating(rating) {}
 
+//Перегрузка оператора вывода для структуры Document
 std::ostream& operator<<(std::ostream& out, const Document& document) {
     out << "{ "
         << "document_id = " << document.id << ", "
