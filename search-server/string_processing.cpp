@@ -3,23 +3,29 @@
 #include <string>
 #include <string_view>
 
-std::vector<std::string_view> SplitIntoWords(const std::string_view& str) {
-    std::vector<std::string_view> result;
-    // 1
-    int64_t pos = str.find_first_not_of(" ");
-    // 2
-    const int64_t pos_end = str.npos;
-    // 3
-    while (pos != pos_end) {
-        // 4
-        int64_t space = str.find(' ', pos);
-        // 5
-        result.push_back(space == pos_end ? str.substr(pos) : str.substr(pos, space - pos));
-        // 6
-        pos = str.find_first_not_of(" ", space);
+using namespace std;
+
+list<string_view> SplitIntoWords(string_view text) {
+    list<string_view> words;
+    
+    int i = 0;
+    int len = 0;
+    for_each(text.begin(), text.end(), [&](const char& c) {
+        if (c == ' ') {
+            if (len) {
+                words.push_back(text.substr(i, len));
+                i += len;
+                len = 0;
+            }
+            ++i;
+        } else {
+            ++len;
+        }
+    });
+    
+    if (len) {
+        words.push_back(text.substr(i, len));
     }
-
-    return result;
-} 
-
-
+    
+    return words;
+}

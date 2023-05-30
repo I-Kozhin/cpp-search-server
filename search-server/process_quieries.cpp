@@ -1,36 +1,39 @@
 #include "process_queries.h"
-#include <vector>
-#include <string>
-#include <algorithm>
 #include <execution>
-#include <iostream>
-#include <functional>
+#include <iterator>
 
+std::vector<std::vector<Document>> ProcessQueries(const SearchServer& search_server, const std::vector<std::string>& queries) {
+    std::vector<std::vector<Document>> documents_lists(queries.size());    
+    std::transform(std::execution::par, queries.begin(), queries.end(), documents_lists.begin(),
+        [&search_server](const std::string& query) { 
+            return search_server.FindTopDocuments(query); 
+        });
 
-std::vector<std::vector<Document>> ProcessQueries(
-    const SearchServer& search_server,
-    const std::vector<std::string>& queries)
-{
-    std::vector<Document> results;
-    std::vector<std::vector<Document>> itg(queries.size());
-    transform(std::execution::par, queries.begin(), queries.end(), itg.begin(),     [&search_server](std::string string_for_find) {return search_server.FindTopDocuments(string_for_find); } );
-
-return itg;    
-    
+    return documents_lists;
 }
 
-std::vector<Document> ProcessQueriesJoined(const SearchServer& search_server, const std::vector<std::string>& queries)
-{
-    //size_t total_size = 0u;
-    auto matched_docs = ProcessQueries(search_server, queries);
-    /*for (auto& query_res : matched_docs) {
-        total_size += query_res.size();
-    }*/
-    std::vector<Document> result;
-    //result.reserve(total_size);
-    for (auto& query_res : matched_docs) {
-        result.insert(result.end(), query_res.begin(), query_res.end());
+std::vector<Document> ProcessQueriesJoined(const SearchServer& search_server, const std::vector<std::string>& queries) {
+    std::vector<std::vector<Document>> documents_lists(queries.size());    
+    std::transform(std::execution::par, queries.begin(), queries.end(), documents_lists.begin(),
+        [&search_server](const std::string& query) { 
+            return search_server.FindTopDocuments(query); 
+        });
+
+    size_t size = 0;
+    for (const auto& documents_list : documents_lists) {
+        size += documents_list.size();
     }
-    
+
+    std::vector<Document> result;
+    result.reserve(size);
+    auto it_begin = result.begin();
+    for (auto& documents_list : documents_lists) {
+        result.resize(result.size() + documents_list.size());
+        it_begin = std::transform(std::make_move_iterator(documents_list.begin()), std::make_move_iterator(documents_list.end()), it_begin,
+            [](const Document& value) { 
+                return value;
+            });
+    }
+
     return result;
 }
