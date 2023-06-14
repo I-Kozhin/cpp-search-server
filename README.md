@@ -1,2 +1,2 @@
-# cpp-search-server
-Финальный проект: поисковый сервер
+# Serachr Server
+This is C++ based project.
